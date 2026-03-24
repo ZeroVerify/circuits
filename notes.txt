@@ -1,0 +1,32 @@
+creates all the necessary files
+circom student_status.circom --r1cs --wasm --sym -l node_modules/circomlib/circuits
+
+creates the witness
+cd student_status_js
+snarkjs wtns calculate student_status.wasm ../input.json witness.wtns
+
+verifies with the witness
+snarkjs wtns check ../student_status.r1cs witness.wtns 
+
+export witness to json
+snarkjs wtns export json witness.wtns witness.json
+
+
+
+the current input.json file does not have a valid signature because that needs to be generated and needs to be real
+this will be generated in the go program which i will create 
+I commented out the signature checks in the .circom file for now
+
+template instances: 147
+non-linear constraints: 571
+linear constraints: 0
+public inputs: 0
+public outputs: 2
+private inputs: 11
+private outputs: 0
+wires: 576
+labels: 1834
+Written successfully: ./student_status.r1cs
+Written successfully: ./student_status.sym
+Written successfully: ./student_status_js/student_status.wasm
+Everything went okay, circom safe
