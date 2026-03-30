@@ -1,0 +1,16 @@
+{
+  "enrollment_status": "1",
+  "issued_at": "1000",
+  "expires_at": "9999999999",
+
+  "Ax": "1",
+  "Ay": "2",
+  "R8x": "3",
+  "R8y": "4",
+  "S": "5",
+
+  "subject_pseudonym": "12345",
+
+  "challenge_nonce": "42",
+  "now": "1000"
+}
