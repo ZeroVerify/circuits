@@ -1,5 +1,5 @@
 creates all the necessary files
-circom student_status.circom --r1cs --wasm --sym -l node_modules/circomlib/circuits
+circom circuit_files/student_status.circom --r1cs --wasm --sym -l node_modules/circomlib/circuits
 
 creates the witness
 cd student_status_js
