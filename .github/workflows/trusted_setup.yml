@@ -2,6 +2,10 @@ name: trusted_setup
 
 on:
   workflow_dispatch:
+    inputs:
+      beacon_hash:
+        description: 'Public randomness beacon (64 hex chars, no 0x prefix) — e.g. an Ethereum block hash'
+        required: true
 
 jobs:
   trusted-setup:
@@ -9,11 +13,12 @@ jobs:
 
     permissions:
       contents: write
+      id-token: write
 
     env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      S3_BUCKET: ${{ secrets.S3_BUCKET }}
-      BEACON_HASH: ${{ secrets.BEACON_HASH }}
+      AWS_REGION: us-east-1
+      S3_BUCKET: zeroverify-artifacts
+      BEACON_HASH: ${{ inputs.beacon_hash }}
 
     steps:
       - name: Check out repository
@@ -38,9 +43,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: arn:aws:iam::043189681060:role/ZeroVerifyGitHubActionsArtifactUpload
+          aws-region: us-east-1
 
       - name: Run trusted setup
         env:
