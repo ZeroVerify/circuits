@@ -1,0 +1,22 @@
+name: circuit_change_warning
+
+on:
+  pull_request:
+    paths:
+      - 'circuits/**/*.circom'
+      - 'circuit_files/**/*.circom'
+
+jobs:
+  warn:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Post warning comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment "${{ github.event.pull_request.number }}" \
+            --body "Circuit source changed — trusted_setup.yml must be manually triggered after this PR merges before the wallet or verifier SDK will work with the updated circuit"
