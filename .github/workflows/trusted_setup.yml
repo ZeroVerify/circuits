@@ -30,20 +30,24 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: |
-          npm install -g snarkjs
-          npm install circomlib
+        run: npm install
 
       - name: Install circom
         run: |
           curl -fL https://github.com/iden3/circom/releases/download/v2.2.3/circom-linux-amd64 -o /usr/local/bin/circom
           chmod +x /usr/local/bin/circom
 
+      - name: Install snarkjs
+        run: npm install -g snarkjs
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::043189681060:role/ZeroVerifyGitHubActionsArtifactUpload
           aws-region: us-east-1
+
+      - name: Generate test inputs
+        run: node scripts/generate_test_inputs.js
 
       - name: Run trusted setup
         env:

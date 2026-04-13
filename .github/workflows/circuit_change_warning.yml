@@ -3,7 +3,6 @@ name: circuit_change_warning
 on:
   pull_request:
     paths:
-      - 'circuits/**/*.circom'
       - 'circuit_files/**/*.circom'
 
 jobs:
@@ -11,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
-      issues: write
 
     steps:
       - name: Post warning comment
