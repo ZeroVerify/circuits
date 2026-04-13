@@ -19,7 +19,6 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
       id-token: write
 
     env:
@@ -62,11 +61,3 @@ jobs:
           CIRCOMLIB_PATH: ${{ github.workspace }}/node_modules/circomlib/circuits
         run: bash scripts/trusted_setup.sh
 
-      - name: Create release for this artifact version
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="trusted-setup-${GITHUB_SHA}"
-          gh release create "$TAG" \
-            --title "Trusted setup ${GITHUB_SHA}" \
-            --notes "Trusted setup artifacts for commit ${GITHUB_SHA}"
