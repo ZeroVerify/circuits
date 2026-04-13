@@ -50,13 +50,45 @@ async function generateStudentStatusInputs() {
     };
 }
 
-async function main() {
-    const inputs = await generateStudentStatusInputs();
+async function generateCredentialRevocationInputs() {
+    const eddsa = await buildEddsa();
+    const F = eddsa.F;
 
-    const outPath = path.join(__dirname, '..', 'testdata', 'student_status', 'input_valid.json');
+    const privKey = Buffer.from(
+        '0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20',
+        'hex'
+    );
+    const pubKey = eddsa.prv2pub(privKey);
+
+    const credentialID = 'test-credential-id-00000000-0000-0000-0000-000000000001';
+    const credentialIDFE = fieldElement(credentialID);
+
+    const fieldValue = 'student';
+    const fieldHash = fieldElement(fieldValue);
+
+    const sig = eddsa.signPoseidon(privKey, F.e(fieldHash));
+
+    return {
+        credential_id: credentialIDFE.toString(),
+        Ax: F.toObject(pubKey[0]).toString(),
+        Ay: F.toObject(pubKey[1]).toString(),
+        field_hash: fieldHash.toString(),
+        R8x: F.toObject(sig.R8[0]).toString(),
+        R8y: F.toObject(sig.R8[1]).toString(),
+        S: sig.S.toString(),
+    };
+}
+
+async function writeInputs(name, inputs) {
+    const outPath = path.join(__dirname, '..', 'testdata', name, 'input_valid.json');
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, JSON.stringify(inputs, null, 2) + '\n');
     console.log('Generated:', outPath);
+}
+
+async function main() {
+    await writeInputs('student_status', await generateStudentStatusInputs());
+    await writeInputs('credential_revocation', await generateCredentialRevocationInputs());
 }
 
 main().catch(err => {

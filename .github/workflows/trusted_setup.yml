@@ -6,6 +6,13 @@ on:
       beacon_hash:
         description: 'Public randomness beacon (64 hex chars, no 0x prefix) — e.g. an Ethereum block hash'
         required: true
+      circuit:
+        description: 'Circuit to run trusted setup for'
+        required: true
+        type: choice
+        options:
+          - student_status
+          - credential_revocation
 
 jobs:
   trusted-setup:
@@ -19,6 +26,7 @@ jobs:
       AWS_REGION: us-east-1
       S3_BUCKET: zeroverify-artifacts
       BEACON_HASH: ${{ inputs.beacon_hash }}
+      CIRCUITS: ${{ inputs.circuit }}
 
     steps:
       - name: Check out repository
