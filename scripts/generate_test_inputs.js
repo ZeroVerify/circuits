@@ -31,7 +31,8 @@ async function generateStudentStatusInputs() {
     const expiresAt = BigInt(9999999999);
     const now = BigInt(1700000001);
 
-    const msgHash = poseidon([subjectPseudonymFE, enrollmentStatusFE, issuedAt, expiresAt]);
+    const revocationIndex = BigInt(7);
+    const msgHash = poseidon([subjectPseudonymFE, enrollmentStatusFE, issuedAt, expiresAt, revocationIndex]);
 
     const sig = eddsa.signPoseidon(privKey, msgHash);
 
@@ -40,6 +41,7 @@ async function generateStudentStatusInputs() {
         enrollment_status: enrollmentStatusFE.toString(),
         issued_at: issuedAt.toString(),
         expires_at: expiresAt.toString(),
+        revocation_index: revocationIndex.toString(),
         Ax: F.toObject(pubKey[0]).toString(),
         Ay: F.toObject(pubKey[1]).toString(),
         R8x: F.toObject(sig.R8[0]).toString(),
@@ -63,16 +65,13 @@ async function generateCredentialRevocationInputs() {
     const credentialID = 'test-credential-id-00000000-0000-0000-0000-000000000001';
     const credentialIDFE = fieldElement(credentialID);
 
-    const fieldValue = 'student';
-    const fieldHash = fieldElement(fieldValue);
-
-    const sig = eddsa.signPoseidon(privKey, F.e(fieldHash));
+    const sig = eddsa.signPoseidon(privKey, F.e(credentialIDFE));
 
     return {
         credential_id: credentialIDFE.toString(),
         Ax: F.toObject(pubKey[0]).toString(),
         Ay: F.toObject(pubKey[1]).toString(),
-        field_hash: fieldHash.toString(),
+        field_hash: credentialIDFE.toString(),
         R8x: F.toObject(sig.R8[0]).toString(),
         R8y: F.toObject(sig.R8[1]).toString(),
         S: sig.S.toString(),
