@@ -24,9 +24,12 @@ template StudentStatus() {
     signal input now;                 // Unix timestamp. The verifier MUST check it against its own clock.
 
     // ---------- Public Outputs ----------
-    // Public signal order: [out_nonce, revocation_index, challenge_nonce, now]
+    // Public signal order: [out_nonce, pseudonym_hash, revocation_index, challenge_nonce, now]
     signal output out_nonce;
-    signal output out_revocation_index;   // lets the verifier check the revocation bit; replaces the old pseudonym_hash output, which linked all proofs of one credential
+    // Known constraint: pseudonym_hash is identical in every proof from the same person, so verifiers can detect
+    // reuse (one person, one use) but colluding verifiers can also link that person across services.
+    signal output pseudonym_hash;
+    signal output out_revocation_index;   // lets the verifier check the revocation bit
 
     // ---------- 1. Enrollment Check ----------
     // 906954226396135619011145686687621910857321037597927521422477382836222528533
@@ -69,6 +72,10 @@ template StudentStatus() {
     // ---------- 5. Outputs ----------
     out_nonce <== challenge_nonce;
     out_revocation_index <== revocation_index;
+
+    component pseudonymHasher = Poseidon(1);
+    pseudonymHasher.inputs[0] <== subject_pseudonym;
+    pseudonym_hash <== pseudonymHasher.out;
 }
 
 component main {public [challenge_nonce, now]} = StudentStatus();
