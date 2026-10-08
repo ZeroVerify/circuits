@@ -11,6 +11,7 @@ template StudentStatus() {
     signal input enrollment_status;   // field element: SHA256("student") mod BabyJubJub SubOrder
     signal input issued_at;           // Unix timestamp
     signal input expires_at;          // Unix timestamp
+    signal input revocation_index;    // Bitstring Status List position, signed by the issuer
 
     signal input Ax;  // EdDSA public key x-coordinate
     signal input Ay;  // EdDSA public key y-coordinate
@@ -20,11 +21,12 @@ template StudentStatus() {
 
     // ---------- Public Inputs ----------
     signal input challenge_nonce;
-    signal input now;                 // Unix timestamp, supplied by verifier
+    signal input now;                 // Unix timestamp. The verifier MUST check it against its own clock.
 
     // ---------- Public Outputs ----------
+    // Public signal order: [out_nonce, revocation_index, challenge_nonce, now]
     signal output out_nonce;
-    signal output pseudonym_hash;
+    signal output out_revocation_index;   // lets the verifier check the revocation bit; replaces the old pseudonym_hash output, which linked all proofs of one credential
 
     // ---------- 1. Enrollment Check ----------
     // 906954226396135619011145686687621910857321037597927521422477382836222528533
@@ -46,12 +48,13 @@ template StudentStatus() {
     ltExpiry.out === 1;
 
     // ---------- 3. Credential Message Hash ----------
-    // Message = Poseidon(subject_pseudonym, enrollment_status, issued_at, expires_at)
-    component msgHasher = Poseidon(4);
+    // Message = Poseidon(subject_pseudonym, enrollment_status, issued_at, expires_at, revocation_index)
+    component msgHasher = Poseidon(5);
     msgHasher.inputs[0] <== subject_pseudonym;
     msgHasher.inputs[1] <== enrollment_status;
     msgHasher.inputs[2] <== issued_at;
     msgHasher.inputs[3] <== expires_at;
+    msgHasher.inputs[4] <== revocation_index;
 
     // ---------- 4. EdDSA Signature Verification ----------
     component verifier = EdDSAPoseidonVerifier();
@@ -65,10 +68,7 @@ template StudentStatus() {
 
     // ---------- 5. Outputs ----------
     out_nonce <== challenge_nonce;
-
-    component pseudonymHasher = Poseidon(1);
-    pseudonymHasher.inputs[0] <== subject_pseudonym;
-    pseudonym_hash <== pseudonymHasher.out;
+    out_revocation_index <== revocation_index;
 }
 
 component main {public [challenge_nonce, now]} = StudentStatus();

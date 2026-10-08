@@ -11,7 +11,7 @@ include "eddsaposeidon.circom";
 //   Ax, Ay        — issuer BabyJubJub public key coordinates
 //
 // Private inputs:
-//   field_hash    — SHA256(field_value) mod BabyJubJub SubOrder
+//   field_hash    — must equal credential_id (the signed message)
 //   R8x, R8y, S  — EdDSA signature components from the credential's fieldSignatures
 template CredentialRevocation() {
     // ---------- Public Inputs ----------
@@ -24,6 +24,11 @@ template CredentialRevocation() {
     signal input R8x;
     signal input R8y;
     signal input S;
+
+    // ---------- Binding ----------
+    // The signed message must be this credential's id. Without this constraint
+    // any issuer signature would be accepted for any credential_id.
+    field_hash === credential_id;
 
     // ---------- Signature Verification ----------
     // Proves the prover holds a valid field signature from the issuer,
