@@ -77,17 +77,41 @@ verify_public_url() {
   curl -fsI "${url}" >/dev/null
 }
 
+# BLAKE2b hashes of the public Hermez powers-of-tau files (the values published in the snarkjs README).
+# The file is verified after download, so the mirror does not need to be trusted.
+declare -A PTAU_B2=(
+  [powersOfTau28_hez_final_16.ptau]="6a6277a2f74e1073601b4f9fed6e1e55226917efb0f0db8a07d98ab01df1ccf43eb0e8c3159432acd4960e2f29fe84a4198501fa54c8dad9e43297453efec125"
+)
+# The original Google Cloud and Azure Hermez mirrors no longer serve this file (403), so it is hosted in our artifacts bucket.
+: "${PTAU_BASE_URL:=https://artifacts.api.zeroverify.net/ptau}"
+
+verify_ptau() {
+  local ptau_file="$1"
+  local expected="${PTAU_B2[$(basename "${ptau_file}")]:-}"
+  if [[ -z "${expected}" ]]; then
+    echo "No known BLAKE2b hash for $(basename "${ptau_file}"); add it to PTAU_B2 before using it." >&2
+    exit 1
+  fi
+  local actual
+  actual="$(b2sum "${ptau_file}" | cut -d' ' -f1)"
+  if [[ "${actual}" != "${expected}" ]]; then
+    echo "PTAU hash mismatch for ${ptau_file}: expected ${expected}, got ${actual}" >&2
+    rm -f "${ptau_file}"
+    exit 1
+  fi
+}
+
 download_ptau_if_needed() {
   local ptau_file="$1"
-  local ptau_url="$2"
+  local ptau_url="${PTAU_BASE_URL}/$(basename "${ptau_file}")"
 
   if [[ -f "${ptau_file}" ]]; then
     log "Using existing PTAU: ${ptau_file}"
-    return 0
+  else
+    log "Downloading PTAU: ${ptau_url}"
+    curl -fL "${ptau_url}" -o "${ptau_file}"
   fi
-
-  log "Downloading PTAU: ${ptau_url}"
-  curl -fL "${ptau_url}" -o "${ptau_file}"
+  verify_ptau "${ptau_file}"
 }
 
 # Adjust these thresholds later if your circuits get bigger.
@@ -95,11 +119,11 @@ select_ptau_for_constraints() {
   local constraints="$1"
 
   if (( constraints <= 65536 )); then
-    echo "powersOfTau28_hez_final_16.ptau|https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_16.ptau"
+    echo "powersOfTau28_hez_final_16.ptau|"
   elif (( constraints <= 131072 )); then
-    echo "powersOfTau28_hez_final_17.ptau|https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_17.ptau"
+    echo "powersOfTau28_hez_final_17.ptau|"
   elif (( constraints <= 262144 )); then
-    echo "powersOfTau28_hez_final_18.ptau|https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_18.ptau"
+    echo "powersOfTau28_hez_final_18.ptau|"
   else
     echo "Constraint count ${constraints} too large" >&2
     exit 1
@@ -247,6 +271,7 @@ main() {
   need_cmd snarkjs
   need_cmd curl
   need_cmd openssl
+  need_cmd b2sum
 
   if [[ "${DRY_RUN}" == "false" ]]; then
     need_cmd aws
