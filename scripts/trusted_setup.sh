@@ -56,14 +56,16 @@ upload_artifact() {
 
   if [[ "${DRY_RUN}" == "true" ]]; then
     echo "[DRY RUN] Would upload: ${file} -> s3://${S3_BUCKET:-dummy-bucket}/${s3_key}"
-    echo "[DRY RUN] Headers: Content-Type=${content_type}, Cache-Control=public, max-age=86400"
+    echo "[DRY RUN] Headers: Content-Type=${content_type}, Cache-Control=public, no-cache"
     return 0
   fi
 
+  # no-cache means "store, but revalidate before use" (a cheap 304 when unchanged). The files keep the same URL across
+  # trusted setups, and a 24 hour max-age left browsers on the previous circuit for a day after a new setup.
   aws s3 cp "${file}" "s3://${S3_BUCKET}/${s3_key}" \
     --region "${AWS_REGION}" \
     --content-type "${content_type}" \
-    --cache-control "public, max-age=86400"
+    --cache-control "public, no-cache"
 }
 
 verify_public_url() {
