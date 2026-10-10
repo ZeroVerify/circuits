@@ -12,19 +12,20 @@ template StudentStatus() {
     signal input issued_at;           // Unix timestamp
     signal input expires_at;          // Unix timestamp
     signal input revocation_index;    // Bitstring Status List position, signed by the issuer
-
-    signal input Ax;  // EdDSA public key x-coordinate
-    signal input Ay;  // EdDSA public key y-coordinate
-    signal input R8x;
+    signal input R8x;                 // EdDSA signature
     signal input R8y;
     signal input S;
 
     // ---------- Public Inputs ----------
+    // The issuer public key MUST be public. When it was private, anyone could sign their own credential with their own
+    // key and obtain a proof that verified. The verifier compares these two signals with the issuer's published key.
+    signal input Ax;                  // issuer EdDSA public key x-coordinate
+    signal input Ay;                  // issuer EdDSA public key y-coordinate
     signal input challenge_nonce;
     signal input now;                 // Unix timestamp. The verifier MUST check it against its own clock.
 
     // ---------- Public Outputs ----------
-    // Public signal order: [out_nonce, pseudonym_hash, revocation_index, challenge_nonce, now]
+    // Public signal order: [out_nonce, pseudonym_hash, revocation_index, Ax, Ay, challenge_nonce, now]
     signal output out_nonce;
     // Known constraint: pseudonym_hash is identical in every proof from the same person, so verifiers can detect
     // reuse (one person, one use) but colluding verifiers can also link that person across services.
@@ -78,4 +79,4 @@ template StudentStatus() {
     pseudonym_hash <== pseudonymHasher.out;
 }
 
-component main {public [challenge_nonce, now]} = StudentStatus();
+component main {public [Ax, Ay, challenge_nonce, now]} = StudentStatus();
